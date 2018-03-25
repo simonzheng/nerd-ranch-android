@@ -18,8 +18,8 @@ public class QuizActivity extends AppCompatActivity {
     private Question[] mQuestionBank = new Question[] {
             new Question(R.string.question_australia, true),
             new Question(R.string.question_oceans, true),
-            new Question(R.string.question_mideast, true),
-            new Question(R.string.question_africa, true),
+            new Question(R.string.question_mideast, false),
+            new Question(R.string.question_africa, false),
             new Question(R.string.question_americas, true),
             new Question(R.string.question_asia, true)
     };
@@ -42,18 +42,14 @@ public class QuizActivity extends AppCompatActivity {
         mTrueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(QuizActivity.this,
-                        R.string.correct_toast,
-                        Toast.LENGTH_SHORT).show();
+                checkAnswer(true);
             }
         });
 
         mFalseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(QuizActivity.this,
-                        R.string.incorrect_toast,
-                        Toast.LENGTH_SHORT).show();
+                checkAnswer(false);
             }
         });
 
@@ -71,5 +67,19 @@ public class QuizActivity extends AppCompatActivity {
     private void updateQuestion() {
         int question = mQuestionBank[mCurrentIndex].getTextResId();
         mQuestionTextView.setText(question);
+    }
+
+    private void checkAnswer(boolean userPressedTrue) {
+        boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
+
+        int messageResId = 0;
+
+        if (userPressedTrue == answerIsTrue) {
+            messageResId = R.string.correct_toast;
+        } else {
+            messageResId = R.string.incorrect_toast;
+        }
+
+        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show();
     }
 }
