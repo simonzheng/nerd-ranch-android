@@ -1,5 +1,6 @@
 package com.bignerdranch.android.geoquiz;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ public class QuizActivity extends AppCompatActivity {
 
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
+    private static final int RESULT_CODE_CHEAT = 0;
 
     // note: m prefix on instance vars denote a member variable (Android convention)
     private Button mTrueButton;
@@ -31,6 +33,7 @@ public class QuizActivity extends AppCompatActivity {
     };
 
     private int mCurrentIndex = 0;
+    private boolean mIsCheater;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +70,7 @@ public class QuizActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
+                mIsCheater = false;
                 updateQuestion();
             }
         });
@@ -83,7 +87,7 @@ public class QuizActivity extends AppCompatActivity {
                 // NTS: Intents must be used for QuizActivity to communicate via the ActivityManager to open the CheatActivity
                 // This pattern makes it easy for an activity in one application to work with an activity in another application
                 // When an activity in your application wants to start an activity in another application, you create an implicit intent (see Chapter 15)
-                startActivity(intent);
+                startActivityForResult(intent, RESULT_CODE_CHEAT);
             }
         });
 
@@ -97,6 +101,21 @@ public class QuizActivity extends AppCompatActivity {
         savedInstanceState.putInt(KEY_INDEX, mCurrentIndex);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent resultIntent) {
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+
+        if (requestCode == RESULT_CODE_CHEAT) {
+            if (resultIntent == null) {
+                return;
+            }
+
+            mIsCheater = CheatActivity.wasAnswerShown(resultIntent);
+        }
+    }
+
     private void updateQuestion() {
         int question = mQuestionBank[mCurrentIndex].getTextResId();
         mQuestionTextView.setText(question);
@@ -107,10 +126,14 @@ public class QuizActivity extends AppCompatActivity {
 
         int messageResId = 0;
 
-        if (userPressedTrue == answerIsTrue) {
-            messageResId = R.string.correct_toast;
+        if (mIsCheater) {
+            messageResId = R.string.judgment_toast;
         } else {
-            messageResId = R.string.incorrect_toast;
+            if (userPressedTrue == answerIsTrue) {
+                messageResId = R.string.correct_toast;
+            } else {
+                messageResId = R.string.incorrect_toast;
+            }
         }
 
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show();
